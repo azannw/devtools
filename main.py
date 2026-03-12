@@ -6,7 +6,6 @@ Main entry point: app shell with sidebar navigation.
 import customtkinter as ctk
 
 from utils import theme
-from tools.bg_remover import BackgroundRemoverTool
 from tools.compressor import CompressorTool
 from tools.img_to_pdf import ImagesToPdfTool
 from tools.file_converter import FileConverterTool
@@ -35,7 +34,7 @@ class ToolKitApp(ctk.CTk):
         self._register_tools()
 
         # show first tool
-        self._show_tool("bg_remover")
+        self._show_tool("compressor")
 
     # ── sidebar ───────────────────────────────────────────────────────
 
@@ -63,7 +62,6 @@ class ToolKitApp(ctk.CTk):
         # nav buttons
         self._nav_buttons = {}
         nav_items = [
-            ("bg_remover",     "\u2702  Background Remover"),
             ("compressor",     "\u2699  Compressor"),
             ("img_to_pdf",     "\u2630  Images to PDF"),
             ("file_converter", "\u21c4  File Converter"),
@@ -99,7 +97,6 @@ class ToolKitApp(ctk.CTk):
 
     def _register_tools(self):
         self._tools = {
-            "bg_remover":     BackgroundRemoverTool(self._content),
             "compressor":     CompressorTool(self._content),
             "img_to_pdf":     ImagesToPdfTool(self._content),
             "file_converter": FileConverterTool(self._content),

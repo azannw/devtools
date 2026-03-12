@@ -117,8 +117,12 @@ class CompressorTool(ctk.CTkFrame):
         self._img_out_label.pack(side="left", padx=theme.PAD_SMALL)
         self._img_output_dir = None
 
-        # compress
-        theme.create_action_button(inner, "Compress Images", self._start_image_compress, width=200).pack(anchor="w", pady=(theme.PAD_LARGE, 0))
+        # action row: compress + open folder
+        action_row = ctk.CTkFrame(inner, fg_color="transparent")
+        action_row.pack(fill="x", pady=(theme.PAD_LARGE, 0))
+        theme.create_action_button(action_row, "Compress Images", self._start_image_compress, width=200).pack(side="left")
+        self._img_open_folder_btn = theme.create_secondary_button(action_row, "Open Output Folder", self._open_img_output_folder, width=180)
+        # hidden initially, shown after successful compression
 
         return card
 
@@ -168,9 +172,13 @@ class CompressorTool(ctk.CTkFrame):
         self._res_menu.set("Original")
         self._res_menu.pack(side="right")
 
-        # compress
-        self._vid_compress_btn = theme.create_action_button(inner, "Compress Video", self._start_video_compress, width=200)
-        self._vid_compress_btn.pack(anchor="w", pady=(theme.PAD_LARGE, 0))
+        # action row: compress + open file
+        vid_action_row = ctk.CTkFrame(inner, fg_color="transparent")
+        vid_action_row.pack(fill="x", pady=(theme.PAD_LARGE, 0))
+        self._vid_compress_btn = theme.create_action_button(vid_action_row, "Compress Video", self._start_video_compress, width=200)
+        self._vid_compress_btn.pack(side="left")
+        self._vid_open_file_btn = theme.create_secondary_button(vid_action_row, "Open Output File", self._open_vid_output_file, width=180)
+        # hidden initially, shown after successful compression
 
         # ffmpeg check
         if not shutil.which("ffmpeg"):
@@ -181,6 +189,17 @@ class CompressorTool(ctk.CTkFrame):
             self._vid_compress_btn.configure(state="disabled")
 
         return card
+
+    # ── open output helpers ────────────────────────────────────────────
+
+    def _open_img_output_folder(self):
+        folder = self._img_output_dir or (str(Path(self._image_paths[0]).parent) if self._image_paths else None)
+        if folder and os.path.isdir(folder):
+            os.startfile(folder)
+
+    def _open_vid_output_file(self):
+        if hasattr(self, "_vid_output_path") and os.path.isfile(self._vid_output_path):
+            os.startfile(self._vid_output_path)
 
     # ── file selection ────────────────────────────────────────────────
 
@@ -215,6 +234,7 @@ class CompressorTool(ctk.CTkFrame):
         if not self._image_paths:
             self._status_label.configure(text="Please select images first", text_color=theme.WARNING)
             return
+        self._img_open_folder_btn.pack_forget()
         self._status_label.configure(text="Compressing…", text_color=theme.TEXT_SECONDARY)
         self._progress_bar.set(0)
         threading.Thread(target=self._do_image_compress, daemon=True).start()
@@ -273,6 +293,7 @@ class CompressorTool(ctk.CTkFrame):
                 text=f"Done! {before_mb:.1f} MB → {after_mb:.1f} MB ({reduction:.0f}% smaller)",
                 text_color=theme.SUCCESS,
             ))
+            self.after(0, lambda: self._img_open_folder_btn.pack(side="left", padx=(theme.PAD_MEDIUM, 0)))
         except Exception as e:
             self.after(0, lambda: self._status_label.configure(text=f"Error: {e}", text_color=theme.ERROR))
 
@@ -282,6 +303,7 @@ class CompressorTool(ctk.CTkFrame):
         if not self._video_path:
             self._status_label.configure(text="Please select a video first", text_color=theme.WARNING)
             return
+        self._vid_open_file_btn.pack_forget()
         out = filedialog.asksaveasfilename(
             title="Save compressed video",
             defaultextension=".mp4",
@@ -337,6 +359,7 @@ class CompressorTool(ctk.CTkFrame):
                 text=f"Done! {orig:.1f} MB → {comp:.1f} MB ({reduction:.0f}% smaller)",
                 text_color=theme.SUCCESS,
             ))
+            self.after(0, lambda: self._vid_open_file_btn.pack(side="left", padx=(theme.PAD_MEDIUM, 0)))
         except Exception as e:
             self.after(0, lambda: self._progress_bar.stop())
             self.after(0, lambda: self._progress_bar.configure(mode="determinate"))

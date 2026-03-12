@@ -12,8 +12,7 @@ A personal developer toolkit — a collection of everyday utilities wrapped in a
 
 | Tool | What it does |
 |------|-------------|
-| **Background Remover** | Remove image backgrounds using AI (rembg/U2-Net). Optionally replace with a solid color or custom image. |
-| **Compressor** | Compress images (Pillow) and videos (ffmpeg) with adjustable quality, resolution, and format options. |
+| **Compressor** | Compress images (Pillow) and videos (ffmpeg) with adjustable quality, resolution, and format options. One-click export to open output files/folders. |
 | **Images to PDF** | Combine multiple images into a single PDF. Drag to reorder, configure page size, orientation, and margins. |
 | **File Converter** | Convert between document formats (DOCX, PDF, TXT, XLSX, CSV, PPTX, HTML, Markdown) and image formats (PNG, JPEG, WebP, BMP, ICO, TIFF, GIF). |
 | **YouTube Downloader** | Download videos and audio from YouTube via yt-dlp. Supports playlist downloads, resolution selection, and audio-only extraction. |
@@ -58,7 +57,6 @@ devtools/
 ├── main.py              # App shell — sidebar navigation, tool registration
 ├── requirements.txt     # Python dependencies
 ├── tools/
-│   ├── bg_remover.py    # Background Remover
 │   ├── compressor.py    # Image & Video Compressor
 │   ├── img_to_pdf.py    # Images to PDF
 │   ├── file_converter.py# File Converter
@@ -73,8 +71,6 @@ devtools/
 |---------|---------|
 | customtkinter | Modern Tkinter UI framework |
 | Pillow | Image processing |
-| rembg | AI background removal |
-| onnxruntime | ML inference for rembg |
 | fpdf2 | PDF generation |
 | python-docx | DOCX read/write |
 | openpyxl | XLSX read/write |
