@@ -15,6 +15,8 @@ import customtkinter as ctk
 
 from utils import theme
 
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
 
 # ── ffmpeg detection ──────────────────────────────────────────────────────
 
@@ -251,7 +253,7 @@ class YTDownloaderTool(ctk.CTkFrame):
 
     def _fetch_error(self, err):
         self._fetch_btn.configure(state="normal")
-        self._status_label.configure(text=f"Error: {err}", text_color=theme.ERROR)
+        self._status_label.configure(text=f"Error: {_ANSI_RE.sub('', err)}", text_color=theme.ERROR)
 
     # ── quality ───────────────────────────────────────────────────────
 
@@ -353,6 +355,9 @@ class YTDownloaderTool(ctk.CTkFrame):
             "postprocessor_hooks": [self._pp_hook],
             "quiet": True,
             "no_warnings": True,
+            "retries": 10,
+            "fragment_retries": 10,
+            "file_access_retries": 3,
         }
         if FFMPEG_DIR:
             opts["ffmpeg_location"] = FFMPEG_DIR
@@ -438,4 +443,4 @@ class YTDownloaderTool(ctk.CTkFrame):
         self._downloading = False
         self._reset_download_button()
         self._progress.set(0)
-        self._status_label.configure(text=f"Error: {err}", text_color=theme.ERROR)
+        self._status_label.configure(text=f"Error: {_ANSI_RE.sub('', err)}", text_color=theme.ERROR)
