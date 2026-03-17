@@ -18,6 +18,23 @@ from utils import theme
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
+# ── browser cookie detection ─────────────────────────────────────────────
+
+_BROWSERS = [
+    ("chrome", os.path.join(os.environ.get("LOCALAPPDATA", ""), "Google", "Chrome", "User Data")),
+    ("edge", os.path.join(os.environ.get("LOCALAPPDATA", ""), "Microsoft", "Edge", "User Data")),
+    ("firefox", os.path.join(os.environ.get("APPDATA", ""), "Mozilla", "Firefox", "Profiles")),
+]
+
+
+def _detect_browsers():
+    """Return list of browser names whose data directories exist."""
+    return [name for name, path in _BROWSERS if os.path.isdir(path)]
+
+
+AVAILABLE_BROWSERS = _detect_browsers()
+
+
 # ── ffmpeg detection ──────────────────────────────────────────────────────
 
 def _find_ffmpeg():
@@ -156,6 +173,31 @@ class YTDownloaderTool(ctk.CTkFrame):
 
         theme.create_secondary_button(loc_frame, "Browse", self._browse, width=90).pack(side="right")
 
+        # ── Cookie / browser auth row ──
+        self._cookie_var = ctk.BooleanVar(value=bool(AVAILABLE_BROWSERS))
+        cookie_frame = ctk.CTkFrame(opts_inner, fg_color="transparent")
+        cookie_frame.pack(fill="x", pady=(theme.PAD_MEDIUM, 0))
+
+        ctk.CTkCheckBox(
+            cookie_frame, text="Use browser cookies (needed for HD)",
+            variable=self._cookie_var,
+            font=theme.FONT_BODY, text_color=theme.TEXT_PRIMARY,
+            fg_color=theme.ACCENT, hover_color=theme.ACCENT_HOVER,
+            border_color=theme.BORDER,
+        ).pack(side="left")
+
+        browser_values = AVAILABLE_BROWSERS if AVAILABLE_BROWSERS else ["none"]
+        self._browser_menu = ctk.CTkOptionMenu(
+            cookie_frame, values=browser_values, width=110,
+            fg_color=theme.BG_INPUT, button_color=theme.ACCENT,
+            button_hover_color=theme.ACCENT_HOVER, text_color=theme.TEXT_PRIMARY,
+            dropdown_fg_color=theme.BG_CARD, dropdown_hover_color=theme.ACCENT_MUTED,
+            dropdown_text_color=theme.TEXT_PRIMARY,
+        )
+        self._browser_menu.pack(side="right")
+        if AVAILABLE_BROWSERS:
+            self._browser_menu.set(AVAILABLE_BROWSERS[0])
+
         # ── Download card ──
         dl_card = theme.create_card_frame(content)
         dl_card.grid(row=2, column=0, sticky="ew", pady=(0, theme.PAD_SMALL))
@@ -203,6 +245,14 @@ class YTDownloaderTool(ctk.CTkFrame):
             return None
         return url
 
+    def _cookie_opts(self):
+        """Return yt-dlp cookie options if browser cookies are enabled."""
+        if self._cookie_var.get() and AVAILABLE_BROWSERS:
+            browser = self._browser_menu.get()
+            if browser and browser != "none":
+                return {"cookiesfrombrowser": (browser,)}
+        return {}
+
     def _reset_download_button(self):
         self._dl_btn.configure(
             text="Download",
@@ -225,6 +275,7 @@ class YTDownloaderTool(ctk.CTkFrame):
         try:
             import yt_dlp
             ydl_opts = {"quiet": True, "no_warnings": True, "skip_download": True, "noplaylist": False}
+            ydl_opts.update(self._cookie_opts())
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
 
@@ -359,6 +410,7 @@ class YTDownloaderTool(ctk.CTkFrame):
             "fragment_retries": 10,
             "file_access_retries": 3,
         }
+        opts.update(self._cookie_opts())
         if FFMPEG_DIR:
             opts["ffmpeg_location"] = FFMPEG_DIR
 
